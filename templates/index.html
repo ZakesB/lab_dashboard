@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sensor Dashboard</title>
+    <!-- Include Bootstrap CSS from a CDN -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Include Chart.js from a CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add custom CSS for additional styling -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Sensor Dashboard</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/devices">Devices</a>
+                    </li>
+                    <!-- Add more navbar links as needed -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="container mt-4">
+        <h1>Sensor Dashboard</h1>
+        <form method="POST" action="/">
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="sensor">Select Sensor:</label>
+                    <select class="form-control" name="sensor" id="sensor">
+                        <option value="temperature">Temperature</option>
+                        <option value="humidity">Humidity</option>
+                        <!-- Add more sensor options here -->
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="graph-type">Select Graph Type:</label>
+                    <select class="form-control" name="graph-type" id="graph-type">
+                        <option value="line">Line Chart</option>
+                        <option value="bar">Bar Chart</option>
+                        <option value="radar">Radar Chart</option>
+                        <!-- Add more graph type options here -->
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-primary btn-block">Display</button>
+                </div>
+            </div>
+        </form>
+        <h2>Selected Sensor: <span id="selected-sensor">{{ selected_sensor }}</span></h2>
+        <canvas id="sensorChart" width="400" height="200"></canvas>
+        <p>Sensor Value: <span id="sensor-value">{{ sensor_data[selected_sensor] }} {{ sensor_units[selected_sensor] }}</span></p>
+    </div>
+
+    <script>
+
+        var ctx = document.getElementById('sensorChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'line',  // Default chart type
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Sensor Data',
+                    data: [],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+<!--            options: {-->
+<!--                responsive: true,-->
+<!--                scales: {-->
+<!--                    x: {-->
+<!--                        type: 'time',-->
+<!--                        time: {-->
+<!--                            unit: 'second' // or 'minute', 'hour', etc.-->
+<!--                        }-->
+<!--                    },-->
+<!--                    y: {-->
+<!--                        beginAtZero: true-->
+<!--                    }-->
+<!--                }-->
+<!--            }-->
+
+        });
+
+        async function updateChart() {
+            //var sensor = document.querySelector('#sensor').value;
+            //var graphType = document.querySelector('#graph-type').value;
+            var selectedSensorElement = document.getElementById('selected-sensor');
+            var sensorValueElement = document.getElementById('sensor-value');
+
+            // Update selected sensor text
+            selectedSensorElement.textContent = selectedSensor;
+
+            // Fetch sensor data
+            try {
+                var response = await fetch(`/get_data?sensor=${selectedSensor}`);
+                if (response.ok) {
+                    var data = await response.json();
+                    //var selectedData = data.map(item => item.y[sensor]);
+                    //chart.data.datasets[0].data = selectedData;
+                    //chart.data.datasets[0].label = sensor;
+
+                    // Update the chart configuration based on the selected graph type
+                    chart.config.type = selectedGraphType;
+
+                    chart.data.labels = Array.from({ length: data.length }, (_, i) => i);
+                    chart.data.datasets[0].data = data;
+                    chart.update();
+
+                    // Update the sensor value text
+                    var sensorUnits = {{ sensor_units | tojson | safe }};
+                    var UoM = JSON.parse(sensorUnits);
+                    sensorValueElement.textContent = data[data.length - 1].y + ' ' + UoM[selectedSensor];
+                } else {
+                    console.error('Failed to fetch sensor data.');
+                }
+            } catch (error) {
+                console.error('Error fetching sensor data:', error);
+            }
+        }
+
+        // Extract the initial sensor and graph type from the server's response
+        //var initialSensor = document.querySelector('#sensor').value;
+        //var initialGraphType = document.querySelector('#graph-type').value;
+
+        // Initialize the chart with the initial data
+        //updateChart(initialSensor, initialGraphType);
+        // Periodically update chart every 2 seconds
+        setInterval(function() {
+            initializeChart();
+        }, 10000);
+
+        // Update the chart when the user selects a different sensor or graph type
+        //document.querySelector('#sensor').addEventListener('change', updateChart);
+        //document.querySelector('#graph-type').addEventListener('change', updateChart);
+
+        // Variables to keep track of user selections
+        var selectedSensor;
+        var selectedGraphType;
+
+        // Function to fetch the initial data and update the chart
+        async function initializeChart() {
+            // Extract the initial sensor and graph type from the server's response
+            selectedSensor = document.querySelector('#sensor').value;
+            selectedGraphType = document.querySelector('#graph-type').value;
+
+            // Initialize the chart with the initial data
+            updateChart();
+
+            // Periodically update the chart every 2 seconds
+            //setInterval(updateChart, 10000);
+        }
+
+        // Call the initializeChart function when the page loads
+        //initializeChart();
+
+        // Preserve the selected options when clicking "Display"
+        document.querySelector('form').addEventListener('submit', function (e) {
+            e.preventDefault(); // Prevent the form from submitting
+            var sensor = document.querySelector('#sensor').value;
+            var graphType = document.querySelector('#graph-type').value;
+            initializeChart();
+            // Periodically update chart every 2 seconds
+            //setInterval(function() {
+            //    updateChart(initialSensor, initialGraphType);
+            //}, 10000);
+        });
+    </script>
+    <!-- Include Bootstrap JS and Popper.js from CDNs for Bootstrap functionality -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

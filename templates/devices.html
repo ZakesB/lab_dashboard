@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connected Devices</title>
+    <!-- Include Bootstrap CSS from a CDN -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Include FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar (if needed) -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Sensor Dashboard</a>
+            <!-- Add any additional navigation links as needed -->
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="container mt-4">
+        <h1>Connected Devices</h1>
+        <div class="row">
+            <!-- Display the form for adding devices as a card next to the first device -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Add Device</h5>
+                        <!-- Form for adding devices (same as before) -->
+                        <form method="POST" action="{{ url_for('add_device') }}">
+                            <div class="form-group">
+                                <label for="device-name">Device Name (Optional):</label>
+                                <input type="text" class="form-control" name="device-name" id="device-name">
+                            </div>
+                            <div class="form-group">
+                                <label for="ip-address">IP Address (Mandatory):</label>
+                                <input type="text" class="form-control" name="ip-address" id="ip-address" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Device</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Display the first device card -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-desktop"></i> {{ devices[0]['name'] }}
+                        </h5>
+                        <p class="card-text">IP Address: {{ devices[0]['ip_address'] }}</p>
+                        <p class="card-text">
+                            {% if devices[0]['online'] %}
+                                <i class="fas fa-circle text-success"></i> Online
+                            {% else %}
+                                <i class="fas fa-circle text-secondary"></i> Offline
+                                <a href="{{ url_for('try_connect', device_index=0) }}" class="btn btn-primary">Connect</a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Display the rest of the connected devices -->
+        {% for device in devices[1:] %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-desktop"></i> {{ device['name'] }}
+                        </h5>
+                        <p class="card-text">IP Address: {{ device['ip_address'] }}</p>
+                        <p class="card-text">
+                            {% if device['online'] %}
+                                <i class="fas fa-circle text-success"></i> Online
+                            {% else %}
+                                <i class="fas fa-circle text-secondary"></i> Offline
+                                <a href="{{ url_for('try_connect', device_index=loop.index0) }}" class="btn btn-primary">Connect</a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Include Bootstrap JS and Popper.js from CDNs for Bootstrap functionality -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
