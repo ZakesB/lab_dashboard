@@ -19,12 +19,14 @@ MAX_DATA_POINTS = 100
 sensor_data = {
     'temperature': [],
     'humidity': [],
+    'distance': [],
 }
 
 # Dictionary for sensor units
 sensor_units = {
     'temperature': '°C',
     'humidity': '%',
+    'distance': 'cm',
 }
 
 # Sample list of connected devices
@@ -54,26 +56,43 @@ def get_data():
     return jsonify(data)
 
 
-def get_sensor_data(selected_sensor):
-    print(f"Selected sensor: {selected_sensor}")
-    # Generate random data for demonstration
-    #if selected_sensor in sensor_data:
-    #    #new_data_point = random.uniform(1, 5)
-    #    #sensor_data[selected_sensor].append(new_data_point)
-    new_data_point = serial_communication.get_latest_sensor_data()
-    print(f"Arduino data >>>>>> {new_data_point[selected_sensor]}")
-    if selected_sensor in new_data_point:
-        sensor_data[selected_sensor].append(new_data_point[selected_sensor])
-    print(f"Sensor Data>>>>: {sensor_data}")
+# def get_sensor_data(selected_sensor):
+#     #print(f"Selected sensor: {selected_sensor}")
+#     # Generate random data for demonstration
+#     #if selected_sensor in sensor_data:
+#     #    #new_data_point = random.uniform(1, 5)
+#     #    #sensor_data[selected_sensor].append(new_data_point)
+#     new_data_point = serial_communication.get_latest_sensor_data()
+#     #print(f"Arduino data >>>>>> {new_data_point[selected_sensor]}")
+#     if selected_sensor in new_data_point:
+#         sensor_data[selected_sensor].append(new_data_point[selected_sensor])
+#     #print(f"Sensor Data>>>>: {sensor_data}")
+#
+#     # Limit the number of data points
+#     if len(sensor_data[selected_sensor]) > MAX_DATA_POINTS:
+#         sensor_data[selected_sensor].pop(0)
+#
+#     # Format data for Chart.js
+#     sensor_data_formatted = [{'x': i, 'y': val} for i, val in enumerate(sensor_data[selected_sensor])]
+#     return sensor_data_formatted
 
-    # Limit the number of data points
-    if len(sensor_data[selected_sensor]) > MAX_DATA_POINTS:
-        sensor_data[selected_sensor].pop(0)
+def get_sensor_data(selected_sensor):
+    new_data_point = serial_communication.get_latest_sensor_data()
+
+    if selected_sensor in new_data_point:
+        # Get the latest sensor data
+        latest_value = new_data_point[selected_sensor]
+
+        # Limit the number of data points
+        if len(sensor_data[selected_sensor]) >= MAX_DATA_POINTS:
+            sensor_data[selected_sensor].pop(0)
+
+        # Append the latest value to sensor_data
+        sensor_data[selected_sensor].append(latest_value)
 
     # Format data for Chart.js
     sensor_data_formatted = [{'x': i, 'y': val} for i, val in enumerate(sensor_data[selected_sensor])]
     return sensor_data_formatted
-
 
 @app.route('/devices')
 def connected_devices():
