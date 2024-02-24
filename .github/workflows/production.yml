@@ -2,7 +2,7 @@ name: CDemo workflow
 
 on:
   push:
-    branches: [ main ]
+    branches: [ preprod ]
 
 jobs:
   deploy:
