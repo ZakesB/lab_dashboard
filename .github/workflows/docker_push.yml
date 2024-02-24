@@ -1,0 +1,21 @@
+name: Docker push
+
+on:
+  push:
+      branches: [ main ]
+
+jobs:
+    build_docker_image:
+                    runs-on: ubuntu-latest
+
+                    steps:
+                       - name: CHeckout repo
+                         uses: actions/checkout@v2
+
+                       - name: Build the image
+                         run: docker build -t app_from_github .
+
+                       - name: Push to the hub
+                         run: |
+                           docker login -u ${{ secrets.DOCKER_USERNAME }} -P ${{ secrets.DOCKER_PASSWORD }}
+                           docker push app_from_github
